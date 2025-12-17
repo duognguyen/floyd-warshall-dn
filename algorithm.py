@@ -10,10 +10,11 @@ class FloydWarshallSolver:
         # Đường chéo chính khởi tạo bằng 0
         for i in range(num_nodes):
             self.dist[i][i] = 0
-    
+
     def add_edge(self, u, v, w):
         self.dist[u][v] = w
-
+        self.dist[v][u] = w 
+        
     def step_k(self, k):
         """Thực hiện một bước k duy nhất và trả về các thay đổi"""
         updates = []
