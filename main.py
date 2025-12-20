@@ -1,118 +1,110 @@
-# main.py
 import tkinter as tk
-from tkinter import messagebox
-from algorithm import FloydWarshallSolver, INF
+from tkinter import filedialog, messagebox, scrolledtext
+from algorithm import FloydWarshallLogic
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-class App:
+class FloydApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Mô phỏng Floyd-Warshall - Đồ án 15")
+        self.root.title("Phần mềm mô phỏng Floyd-Warshall - Đề 15")
+        self.root.geometry("1100x700")
+        self.logic = FloydWarshallLogic()
+
+        # --- Layout chia 2 cột ---
+        left_frame = tk.Frame(root, width=450)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
         
-        # --- Vùng Nhập liệu ---
-        self.input_frame = tk.LabelFrame(root, text="Thiết lập Đồ thị")
-        self.input_frame.pack(side="top", fill="x", padx=10, pady=5)
+        right_frame = tk.Frame(root)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        tk.Label(self.input_frame, text="Số đỉnh:").grid(row=0, column=0)
-        self.entry_nodes = tk.Entry(self.input_frame, width=5)
-        self.entry_nodes.grid(row=0, column=1)
-        self.entry_nodes.insert(0, "4")
+        # --- Input Area ---
+        tk.Label(left_frame, text="Nhập ma trận kề (Dùng 'inf' cho vô cùng):", font=('Arial', 10, 'bold')).pack(anchor="w")
+        self.txt_input = tk.Text(left_frame, height=8, width=50)
+        self.txt_input.pack(pady=5)
+        self.txt_input.insert(tk.END, "0 5 inf 10\ninf 0 3 inf\ninf inf 0 1\ninf inf inf 0")
 
-        tk.Button(self.input_frame, text="Tạo Ma trận Trống", command=self.init_graph).grid(row=0, column=2, padx=5)
+        btn_box = tk.Frame(left_frame)
+        btn_box.pack(pady=5)
+        tk.Button(btn_box, text="Đọc từ File", command=self.load_file).pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_box, text="Chạy Floyd-Warshall", bg="green", fg="white", command=self.run_floyd).pack(side=tk.LEFT, padx=5)
 
-        # --- Vùng Hiển thị Ma trận ---
-        self.matrix_frame = tk.Frame(root)
-        self.matrix_frame.pack(padx=10, pady=10)
-        self.cells = [] # Lưu các label hiển thị ma trận
+        # --- Log Area ---
+        tk.Label(left_frame, text="Bảng log cập nhật giá trị (từng bước k):").pack(anchor="w", pady=(10, 0))
+        self.log_display = scrolledtext.ScrolledText(left_frame, height=20, width=55, bg="#2c3e50", fg="#ecf0f1")
+        self.log_display.pack(pady=5)
+
+        # --- Visual & Path Area ---
+        self.canvas_frame = tk.Frame(right_frame, height=350, bg="white")
+        self.canvas_frame.pack(fill=tk.BOTH, expand=True)
         
-        # --- Vùng Điều khiển & Log ---
-        self.ctrl_frame = tk.Frame(root)
-        self.ctrl_frame.pack(fill="both", expand=True)
-        
-        self.btn_next = tk.Button(self.ctrl_frame, text="BƯỚC TIẾP THEO (Next K)", 
-                                  state="disabled", command=self.process_step)
-        self.btn_next.pack(pady=5)
+        tk.Label(right_frame, text="Danh sách đường đi ngắn nhất:", font=('Arial', 10, 'bold')).pack(anchor="w")
+        self.path_display = scrolledtext.ScrolledText(right_frame, height=10, width=60)
+        self.path_display.pack(pady=5, fill=tk.BOTH)
 
-        self.log_box = tk.Text(self.ctrl_frame, height=8, width=50)
-        self.log_box.pack(padx=10, pady=5)
+    def load_file(self):
+        path = filedialog.askopenfilename()
+        if path:
+            with open(path, 'r') as f:
+                self.txt_input.delete("1.0", tk.END)
+                self.txt_input.insert(tk.END, f.read())
 
-        self.current_k = 0
-        self.solver = None
-
-    def init_graph(self):
-        """Khởi tạo ma trận hiển thị dựa trên số đỉnh"""
+    def run_floyd(self):
         try:
-            n = int(self.entry_nodes.get())
-            self.solver = FloydWarshallSolver(n)
-            self.current_k = 0
+            # Xử lý input
+            lines = self.txt_input.get("1.0", tk.END).strip().split('\n')
+            matrix = []
+            for line in lines:
+                row = [float(x) if x.lower() != 'inf' else np.inf for x in line.split()]
+                matrix.append(row)
             
-            # Xóa các label cũ nếu có
-            for row in self.cells:
-                for cell in row: cell.destroy()
-            self.cells = []
+            self.logic.process_matrix(matrix)
+            success = self.logic.run_floyd()
 
-            # Tạo bảng lưới các ô nhập trọng số (Ma trận kề ban đầu)
-            for i in range(n):
-                row_cells = []
-                for j in range(n):
-                    # Dùng Entry để người dùng nhập trọng số ban đầu
-                    e = tk.Entry(self.matrix_frame, width=5, justify='center')
-                    e.grid(row=i, column=j, padx=2, pady=2)
-                    if i == j: e.insert(0, "0")
-                    else: e.insert(0, "INF")
-                    row_cells.append(e)
-                self.cells.append(row_cells)
-            
-            self.btn_next.config(state="normal")
-            self.log_box.delete('1.0', tk.END)
-            self.log_box.insert(tk.END, "Đã khởi tạo. Hãy nhập trọng số và bấm Next K.\n")
-        except ValueError:
-            messagebox.showerror("Lỗi", "Vui lòng nhập số đỉnh hợp lệ")
+            # Hiển thị đồ thị
+            for widget in self.canvas_frame.winfo_children(): widget.destroy()
+            canvas = FigureCanvasTkAgg(self.logic.get_figure(), master=self.canvas_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-    def process_step(self):
-        n = self.solver.n
-        # Ở bước k=0 đầu tiên, đọc dữ liệu từ các ô Entry vào solver
-        if self.current_k == 0:
-            for i in range(n):
-                for j in range(n):
-                    val = self.cells[i][j].get()
-                    weight = INF if val.upper() == "INF" else int(val)
-                    self.solver.add_edge(i, j, weight)
-            # Chuyển các Entry sang Label (chế độ chỉ đọc) để mô phỏng
-            self.lock_input()
+            # Xuất Log
+            self.log_display.delete("1.0", tk.END)
+            if self.logic.negative_cycle:
+                self.log_display.insert(tk.END, "!!! CẢNH BÁO: PHÁT HIỆN CHU TRÌNH ÂM !!!\n")
+                return
 
-        if self.current_k < n:
-            changes = self.solver.step_k(self.current_k)
-            self.update_display(changes)
-            self.current_k += 1
-        else:
-            messagebox.showinfo("Xong", "Thuật toán đã hoàn thành!")
-            self.btn_next.config(state="disabled")
+            for entry in self.logic.history:
+                step_name = entry[0]
+                mat = entry[1]
+                updates = entry[3] if len(entry) > 3 else []
+                
+                self.log_display.insert(tk.END, f"--- Bước {step_name} ---\n")
+                for i in range(len(mat)):
+                    row_str = ""
+                    for j in range(len(mat)):
+                        val = "∞" if mat[i][j] == np.inf else f"{int(mat[i][j]):>3}"
+                        # Highlight cập nhật (giảm chi phí) bằng dấu sao
+                        mark = "*" if (i, j) in updates else " "
+                        row_str += f"{val}{mark} "
+                    self.log_display.insert(tk.END, f"  [{row_str}]\n")
+                self.log_display.insert(tk.END, "\n")
 
-    def lock_input(self):
-        """Chuyển giao diện từ nhập liệu sang hiển thị tĩnh"""
-        for i in range(len(self.cells)):
-            for j in range(len(self.cells)):
-                val = self.cells[i][j].get()
-                self.cells[i][j].destroy()
-                lbl = tk.Label(self.matrix_frame, text=val, width=5, 
-                               relief="ridge", bg="white")
-                lbl.grid(row=i, column=j, padx=2, pady=2)
-                self.cells[i][j] = lbl
+            # Xuất đường đi
+            self.path_display.delete("1.0", tk.END)
+            for i in range(self.logic.n):
+                for j in range(self.logic.n):
+                    if i != j:
+                        path = self.logic.get_path(i, j)
+                        dist = self.logic.dist[i][j]
+                        if dist == np.inf:
+                            self.path_display.insert(tk.END, f"{i} -> {j}: Không có đường đi\n")
+                        else:
+                            self.path_display.insert(tk.END, f"{i} -> {j}: {' -> '.join(map(str, path))} (CP: {dist})\n")
 
-    def update_display(self, changes):
-        """Cập nhật giá trị và tô màu các ô thay đổi"""
-        # Reset màu nền về trắng
-        for row in self.cells:
-            for cell in row: cell.config(bg="white")
-            
-        self.log_box.insert(tk.END, f">> Xét đỉnh trung gian k={self.current_k}\n")
-        for i, j, old, new in changes:
-            self.cells[i][j].config(text=str(new), bg="lightgreen")
-            log_msg = f"   Cập nhật [{i}][{j}]: {old} -> {new}\n"
-            self.log_box.insert(tk.END, log_msg)
-        self.log_box.see(tk.END)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Dữ liệu không hợp lệ: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = App(root)
+    app = FloydApp(root)
     root.mainloop()
