@@ -7,57 +7,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from algorithm import FloydWarshallLogic 
 
 class FloydApp:
-    # def __init__(self, root):
-    #     self.root = root
-    #     self.root.title("Mô phỏng Floyd-Warshall - Đề 15")
-    #     self.root.geometry("1100x750")
-        
-    #     self.logic = FloydWarshallLogic()
-    #     self.grid_widgets = []
-
-    #     # --- Layout chia 2 vùng: Trái (Cấu hình), Phải (Đồ thị & Log) ---
-    #     left_frame = tk.Frame(root, padx=10, pady=10)
-    #     left_frame.pack(side=tk.LEFT, fill=tk.Y)
-        
-    #     right_frame = tk.Frame(root, padx=10, pady=10)
-    #     right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-
-    #     # --- Vùng Nhập liệu (Bên trái) ---
-    #     tk.Label(left_frame, text="Số đỉnh (n):").grid(row=0, column=0)
-    #     self.ent_n = tk.Entry(left_frame, width=5)
-    #     self.ent_n.insert(0, "4")
-    #     self.ent_n.grid(row=0, column=1)
-    #     tk.Button(left_frame, text="Tạo lưới ma trận", command=self.create_grid).grid(row=0, column=2, padx=5)
-
-    #     # THÊM NÚT NHẬP TỪ FILE TẠI ĐÂY (Column 3)
-    #     self.btn_import = tk.Button(left_frame, text="Nhập từ File", bg="#3498db", fg="white",
-    #                                command=self.import_from_file)
-    #     self.btn_import.grid(row=0, column=3, padx=5)
-
-    #     self.matrix_container = tk.Frame(left_frame, pady=20)
-    #     self.matrix_container.grid(row=1, column=0, columnspan=3)
-
-    #     # Nút Bắt đầu / Tiếp theo
-    #     self.btn_next = tk.Button(left_frame, text="BẮT ĐẦU (Khởi tạo)", bg="#2ecc71", 
-    #                              command=self.handle_step, state=tk.DISABLED)
-    #     self.btn_next.grid(row=2, column=0, columnspan=2, pady=10, sticky="ew")
-
-    #     # THÊM NÚT CLEAR TẠI ĐÂY
-    #     self.btn_clear = tk.Button(left_frame, text="XÓA TẤT CẢ", bg="#e74c3c", fg="white",
-    #                               command=self.clear_all)
-    #     self.btn_clear.grid(row=2, column=2, pady=10, padx=5)
-
-    #     tk.Label(left_frame, text="Đường đi chi tiết:").grid(row=3, column=0, sticky="w")
-    #     self.path_display = scrolledtext.ScrolledText(left_frame, width=40, height=15)
-    #     self.path_display.grid(row=4, column=0, columnspan=3)
-
-    #     # --- Vùng Đồ thị & Log (Bên phải) ---
-    #     self.canvas_frame = tk.Frame(right_frame, height=300, bg="white")
-    #     self.canvas_frame.pack(fill=tk.BOTH, expand=True)
-
-    #     tk.Label(right_frame, text="Log cập nhật giá trị:").pack(anchor="w")
-    #     self.log_area = scrolledtext.ScrolledText(right_frame, height=15, bg="#2c3e50", fg="white")
-    #     self.log_area.pack(fill=tk.X)
     def __init__(self, root):
         self.root = root
         self.root.title("Mô phỏng Floyd-Warshall - Đề 15")
@@ -191,6 +140,7 @@ class FloydApp:
             
             self.log_area.see(tk.END)
 
+
             # ĐÃ XÓA LỆNH self.update_graph() TẠI ĐÂY ĐỂ TRÁNH VẼ LẠI
 
             # Kiểm tra kết thúc hoặc lỗi chu trình âm
@@ -199,6 +149,13 @@ class FloydApp:
                 self.btn_next.config(state=tk.DISABLED)
             elif self.logic.current_k >= self.logic.n:
                 self.show_final_paths()
+                
+            # Đoạn code bổ sung vào trong hàm handle_step (khi k is not None)
+            self.log_area.insert(tk.END, f"\n--- Ma trận NEXT tại bước k={k} ---\n")
+            for row in self.logic.next:
+            # Chuyển đổi -1 thành '-' để dễ nhìn trong bảng Log
+                row_str = " ".join([str(x) if x != -1 else "-" for x in row])
+                self.log_area.insert(tk.END, f"  {row_str}\n")
         else:
             self.btn_next.config(state=tk.DISABLED)
 
