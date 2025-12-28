@@ -28,7 +28,7 @@ class FloydApp:
         # --- VÙNG NHẬP LIỆU (Bên trái) ---
         tk.Label(left_frame, text="Số đỉnh (n):").grid(row=0, column=0)
         self.ent_n = tk.Entry(left_frame, width=5)
-        self.ent_n.insert(0, "4") # Mặc định ban đầu là 4 đỉnh
+        # self.ent_n.insert(0, "4") # Mặc định ban đầu là 4 đỉnh
         self.ent_n.grid(row=0, column=1)
         
         # Các nút thao tác cơ bản
@@ -235,6 +235,7 @@ class FloydApp:
     def clear_all(self):
         """Reset toàn bộ ứng dụng về trạng thái mới bắt đầu"""
         self.logic = FloydWarshallLogic()
+        self.ent_n.delete(0, tk.END)
         for row in self.grid_widgets:
             for ent in row: ent.destroy()
         self.grid_widgets = []
