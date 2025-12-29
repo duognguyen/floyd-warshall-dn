@@ -32,7 +32,7 @@ class FloydApp:
         self.ent_n.grid(row=0, column=1)
         
         # Các nút thao tác cơ bản
-        tk.Button(left_frame, text="Tạo lưới", command=self.create_grid).grid(row=0, column=2, padx=5)
+        tk.Button(left_frame, text="Tạo bảng", command=self.create_table).grid(row=0, column=2, padx=5)
         self.btn_import = tk.Button(left_frame, text="Nhập từ File", bg="#3498db", fg="white", 
                                    command=self.import_from_file).grid(row=0, column=3, padx=5)
 
@@ -64,7 +64,7 @@ class FloydApp:
         self.path_display = scrolledtext.ScrolledText(right_frame, height=12, bg="#ecf0f1")
         self.path_display.pack(fill=tk.X)
 
-    def create_grid(self):
+    def create_table(self):
         """Khởi tạo lưới các ô Entry tương ứng với số đỉnh n"""
         self.grid_widgets = []
         try:
@@ -122,6 +122,7 @@ class FloydApp:
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         plt.close(fig)
+    
 
     def handle_step(self):
         """Hàm điều phối: Xử lý khi người dùng nhấn nút 'BƯỚC TIẾP THEO'"""
@@ -165,7 +166,6 @@ class FloydApp:
             if not updates: 
                 self.log_area.insert(tk.END, "  (Không có thay đổi trong bước này)\n")
             
-            # Hiển thị trạng thái ma trận NEXT hiện tại vào Log
             self.log_area.insert(tk.END, f"\n--- Ma trận TRUY VẾT (NEXT) tại k={k} ---\n")
             for row in self.logic.next:
                 row_str = " ".join([str(x) if x != -1 else "-" for x in row])
@@ -220,7 +220,7 @@ class FloydApp:
             n = len(matrix_data)
             self.ent_n.delete(0, tk.END)
             self.ent_n.insert(0, str(n))
-            self.create_grid()
+            self.create_table()
 
             # Điền dữ liệu vào các ô Entry vừa tạo
             for i in range(n):
